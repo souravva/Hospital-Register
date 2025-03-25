@@ -1,0 +1,51 @@
+const Patient = require("../models/Patient");
+
+exports.addPatient = async (req, res) => {
+    try {
+        const { name, age, gender, contact, medicalHistory } = req.body;
+
+        // Validate input
+        if (!name || !age || !gender || !contact) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+
+        const newPatient = new Patient({
+            name,
+            age,
+            gender,
+            contact,
+            medicalHistory: medicalHistory || "", // Default to empty if not provided
+        });
+
+        await newPatient.save();
+        res.status(201).json({ message: "Patient added successfully", patient: newPatient });
+
+    } catch (error) {
+        console.error("Error adding patient:", error);
+        res.status(500).json({ error: "Server error while adding patient" });
+    }
+};
+
+
+exports.getPatients = async (req, res) => {
+    try {
+        const { patientId } = req.query; // Get patient ID from query params
+
+        let patients;
+        if (patientId) {
+            // Find specific patient by ID
+            patients = await Patient.findById(patientId);
+            if (!patients) {
+                return res.status(404).json({ error: "Patient not found" });
+            }
+        } else {
+            // Fetch all patients if no ID is provided
+            patients = await Patient.find();
+        }
+
+        res.status(200).json(patients);
+    } catch (error) {
+        console.error("Error fetching patients:", error);
+        res.status(500).json({ error: "Server error while fetching patients" });
+    }
+};
